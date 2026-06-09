@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Koneksi Google Apps Script via GitHub</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f4f9; color: #333; }
+        .container { max-width: 500px; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { margin-top: 0; color: #4285F4; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, text-area { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #4285F4; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background-color: #357ae8; }
+        #status { margin-top: 15px; font-weight: bold; text-align: center; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Form Kirim Data</h2>
+    <form id="myForm">
+        <div class="form-group">
+            <label for="nama">Nama Pengguna:</label>
+            <input type="text" id="nama" placeholder="Masukkan nama Anda" required>
+        </div>
+        <div class="form-group">
+            <label for="pesan">Pesan / Data:</label>
+            <input type="text" id="pesan" placeholder="Masukkan pesan Anda" required>
+        </div>
+        <button type="submit" id="btnSubmit">Kirim Data</button>
+    </form>
+    
+    <div id="status"></div>
+</div>
+
+<script>
+document.getElementById('myForm').addEventListener('submit', async function(e) {
+    e.preventDefault(); // Mencegah reload halaman formal
+    
+    const urlScript = 'https://script.google.com/macros/s/AKfycbzmlZBHMyiTU5Kp2V9mdHiaJXvLwmK9ncXxiEm5SiR-utyBb4bb9iDvZADDhYfowF6k/exec';
+    const statusDiv = document.getElementById('status');
+    const btnSubmit = document.getElementById('btnSubmit');
+    
+    // Ambil nilai input
+    const nama = document.getElementById('nama').value;
+    const pesan = document.getElementById('pesan').value;
+    
+    // Susun data dalam bentuk objek objek
+    const payload = {
+        action: "kirimData",
+        nama: nama,
+        pesan: pesan
+    };
+
+    // Tampilkan status loading
+    statusDiv.className = '';
+    statusDiv.innerText = 'Sedang mengirim data...';
+    btnSubmit.disabled = true;
+
+    try {
+        // Eksekusi HTTP Request memakai Fetch API
+        const response = await fetch(urlScript, {
+            method: 'POST',
+            // PENTING: Gunakan text/plain untuk melompati preflight CORS Google Apps Script
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Apps Script mengembalikan teks (bisa berupa teks JSON)
+        const resultText = await response.text(); 
+        
+        statusDiv.className = 'success';
+        statusDiv.innerText = 'Data berhasil dikirim!';
+        console.log('Respon server:', resultText);
+        
+        // Reset form setelah sukses
+        document.getElementById('myForm').reset();
+
+    } catch (error) {
+        statusDiv.className = 'error';
+        statusDiv.innerText = 'Gagal mengirim data. Silakan coba lagi.';
+        console.error('Eror:', error);
+    } finally {
+        btnSubmit.disabled = false;
+    }
+});
+</script>
+
+</body>
+</html>
